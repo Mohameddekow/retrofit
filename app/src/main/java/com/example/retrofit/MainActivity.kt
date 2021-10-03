@@ -3,13 +3,16 @@ package com.example.retrofit
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Adapter
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.retrofit.adapter.MyAdapter
 import com.example.retrofit.databinding.ActivityMainBinding
+import com.example.retrofit.databinding.RowLayoutBinding
 import com.example.retrofit.model.Post
 import com.example.retrofit.repository.Repository
 
@@ -18,6 +21,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: MainViewModel
 
+    //referencing the progress bsr fro here
+    //private val progressBar:View = findViewById(R.id.progressBar) /// unfortunately i couldn't reference this way
 
     //private val myAdapter: MyAdapter = MyAdapter()
     private val myAdapter by lazy { MyAdapter() }
@@ -27,8 +32,11 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.progressBar.isVisible = true
+        binding.loadingTextView.isVisible = true
         //setting up recyclerView
         setupRecyclerView()
+
 
         val repository = Repository()
         val viewModelFactory = MainViewModelFactory(repository)
@@ -38,41 +46,43 @@ class MainActivity : AppCompatActivity() {
 
 
         /**** using POST method   ****/
-        viewModel.pushPost2(2,3, "moha", "android dev")
-
-        viewModel.myResponse.observe(this, Observer { response ->
-
-            if (response.isSuccessful){
-                Log.d("Push", response.body().toString())
-                Log.d("Message", response.message())
-                Log.d("Code", response.code().toString())
-            }else{
-                Toast.makeText(this, response.code(), Toast.LENGTH_SHORT).show()
-            }
-
-        })
-
-
-
-        /**** getting custom post   ****/
-
-//        viewModel.getCustomPost(2, "id", "desc")
-//        viewModel.myCustomPost.observe(this, Observer { response ->
+//        viewModel.pushPost2(2,3, "moha", "android dev")
+//
+//        viewModel.myResponse.observe(this, Observer { response ->
 //
 //            if (response.isSuccessful){
-//
-//                response.body()?.let { myAdapter.setData(it) }
-//                Log.d("Body", response.body().toString())
-//                Log.d("Body", response.message())
+//                Log.d("Push", response.body().toString())
+//                Log.d("Message", response.message())
 //                Log.d("Code", response.code().toString())
-//
 //            }else{
-//
 //                Toast.makeText(this, response.code(), Toast.LENGTH_SHORT).show()
-//
 //            }
 //
 //        })
+
+
+        /**** getting custom post and putting it into our recyclerview  ****/
+
+        viewModel.getCustomPost(2, "id", "desc")
+        viewModel.myCustomPost.observe(this, Observer { response ->
+
+            binding.progressBar.isVisible = false
+            binding.loadingTextView.isVisible = false
+
+            if (response.isSuccessful){
+
+                response.body()?.let { myAdapter.setData(it) }
+                Log.d("Body", response.body().toString())
+                Log.d("Body", response.message())
+                Log.d("Code", response.code().toString())
+
+            }else{
+
+                Toast.makeText(this, response.code(), Toast.LENGTH_SHORT).show()
+
+            }
+
+        })
 
 
 
